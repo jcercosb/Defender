@@ -6,7 +6,7 @@ require("config")
 -- ____________________         Variables globales     ____________________
 
 local activeProfiler = false
-local activeDebug = false
+local activeDebug = true
 
 
 
@@ -31,7 +31,7 @@ score = 0
 
 gameover = false
 
-gameplay = false
+pantallaInicio = true
 
 local isPaused = false
 
@@ -48,7 +48,7 @@ love.frame = 0
 
 function creaEnemigo(offx, offy, img)
   local enemy = {}
-
+  enemy.death = 0
   enemy.x = offx
   enemy.y = offy
   enemy.xEnd = offx + enemies.width
@@ -92,6 +92,8 @@ function setInitValues()
   llegoAlFinalFase = 0
 
   -- Configuración inicial de los enemigos
+  --borramos enemigos
+  enemies.list = {}
 
   creaEnemigos()
 end
@@ -176,7 +178,7 @@ function love.load(args)
 
   projectiles.list = {}
 
-  enemies.imageList = { love.graphics.newImage("imagenes/nave1.png"),
+  enemies.imageList = { love.graphics.newImage("imagenes/Bum-48.png"),
     love.graphics.newImage("imagenes/nave2.png"), love.graphics.newImage("imagenes/nave3.png"),
     love.graphics.newImage("imagenes/nave4.png"), love.graphics.newImage("imagenes/nave5.png"),
     love.graphics.newImage("imagenes/nave6.png"), love.graphics.newImage("imagenes/nave7.png"),
@@ -198,7 +200,7 @@ function love.load(args)
 
   player.y = screenHeight - 50
 
-  if gameplay then
+  if not pantallaInicio then
     love.audio.play(inicioPartida)
     setInitValues()
   end
@@ -222,7 +224,7 @@ function love.update(dt)
 
   -- _________________________ iniciar partida _______________________
 
-  if not gameplay then
+  if pantallaInicio then
     love.audio.play(inicioPartida)
     if love.keyboard.isDown("1") then
       setInitValues()
@@ -389,52 +391,16 @@ function love.draw()
   love.graphics.print("Nivel:" .. level, screenWidth - 75, 25)
   -- _______________________ inicio partida __________________
 
-  if not gameplay then
+  if pantallaInicio then
     love.audio.play(inicioPartida)
     love.graphics.print("Pulsa 1 para iniciar", screenWidth / 2 - 50, screenHeight / 2)
     --love.graphics.print("Score .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 25)
     if love.keyboard.isDown("1") then
-      gameplay = true
+      pantallaInicio = false
       setInitValues()
       love.audio.stop(inicioPartida)
     end
-  end
-
-  -- Dibujo del jugador
-
-  love.graphics.draw(player.image, player.x, player.y)
-
-  --love.graphics.rectangle("line",player.x, player.y,48,48)
-
-
-  --              Dibujo de los enemigos
-
-  for _, enemy in ipairs(enemies.list) do
-    if enemy.death then
-      love.graphics.draw(enemies.imageList[1], enemy.x, enemy.y)
-    else
-      love.graphics.draw(enemies.imageList[enemy.image], enemy.x, enemy.y)
-      --love.graphics.rectangle("line", enemy.x, enemy.y, 48, 48)
-    end
-  end
-
-  --              Dibujo de los proyectiles
-
-  love.graphics.setColor(1, 0, 0)
-  -- Dibujo de los proyectiles
-  tot = #projectiles.list
-  list = projectiles.list
-  for i = 1, tot do
-    proj = list[i]
-    --if not proj.removed then
-    --love.graphics.draw(projectiles.image, projectile.x, projectile.y)
-    love.graphics.rectangle("fill", proj.x, proj.y, 3, 8)
-    --end
-  end
-
-  --    _______________________  GAME OVER _________________
-
-  if gameover then
+  elseif gameover then --    _______________________  GAME OVER _________________
     love.audio.play(inicioPartida)
     love.graphics.print("GAME OVER", screenWidth / 2 - 50, screenHeight / 2)
     love.graphics.print("Score .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 25)
@@ -442,14 +408,56 @@ function love.draw()
     if score > 100 then
       love.graphics.print("Introduce tu nombre .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 50)
     end
-  end
-
-
-  --  _______________ PAUSA ___________________
-
-  if isPaused then
+  elseif isPaused then --  _______________ PAUSA ___________________
     love.graphics.print("Pausa", screenWidth / 2 - 50, screenHeight / 2) -- Muestra el mensaje de pausa en la pantalla
+
+  else
+    -- Dibujo del jugador
+
+    love.graphics.draw(player.image, player.x, player.y)
+
+    --love.graphics.rectangle("line",player.x, player.y,48,48)
+
+
+    --              Dibujo de los enemigos
+    local listEnemies = enemies.list
+    local enemyCount = #listEnemies
+    local j = 1
+    while j <= enemyCount do
+      local enemy = listEnemies[j]
+      if enemy.death == 0 then
+        love.graphics.draw(enemies.imageList[enemy.image], enemy.x, enemy.y)
+        --love.graphics.rectangle("line", enemy.x, enemy.y, 48, 48)
+      else
+        if enemy.death > 10 then
+          table.remove(listEnemies, j)
+          enemyCount = enemyCount - 1
+        else
+          enemy.death = enemy.death + 1
+          love.graphics.draw(enemies.imageList[1], enemy.x, enemy.y)
+        end
+      end
+      j = j + 1
+    end
+
+
+    --              Dibujo de los proyectiles
+
+    love.graphics.setColor(1, 0, 0)
+    -- Dibujo de los proyectiles
+    tot = #projectiles.list
+    list = projectiles.list
+    for i = 1, tot do
+      proj = list[i]
+      --if not proj.removed then
+      --love.graphics.draw(projectiles.image, projectile.x, projectile.y)
+      love.graphics.rectangle("fill", proj.x, proj.y, 3, 8)
+      --end
+    end
   end
+
+
+
 end
 
 -- ______________  QUIT _____________________

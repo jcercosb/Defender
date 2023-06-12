@@ -49,12 +49,12 @@ function checkShotsOnEnemy(enemies, listEnemies, playerShots, listShots)
 
       while j <= enemyCount do
         local enemy = listEnemies[j]
-
+        
         if shotX > enemy.x and shotX < enemy.x + 48 and shot.y > enemy.y and shot.y < enemy.y + 48 then
           love.audio.play(bum)
-          enemy.death = true
+          enemy.death = 1
 
-          table.remove(listEnemies, j)
+          --table.remove(listEnemies, j)
           shot.removed = true
           enemyCount = enemyCount - 1
           shotCount = shotCount - 1
@@ -86,12 +86,14 @@ function checkEnemyHitPlayer(enemies, listEnemies, player)
   local j = 1
   while j <= enemyCount do
     local enemy = listEnemies[j]
+    if enemy.death == 0 then
 
-    if px > enemy.x and px < enemy.x + 48 and py > enemy.y and py < enemy.y + 48 then
-      love.audio.play(bum)
-      enemies.list = {}
-      deathPlayer()
-      break
+      if px > enemy.x and px < enemy.x + 48 and py > enemy.y and py < enemy.y + 48 then
+        love.audio.play(bum)
+        enemies.list = {}
+        deathPlayer()
+        break
+      end
     end
 
     j = j + 1

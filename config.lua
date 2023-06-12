@@ -16,7 +16,7 @@ Block.startX = 0
 
 Block.nextX = 70
 
-Block.image = 1
+Block.image = 2
 
 Block.__index = Block --  para que las instancias de Block puedan acceder a los métodos y propiedades definidos  clases
 
