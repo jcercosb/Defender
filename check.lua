@@ -1,35 +1,39 @@
 function checkCollision(obj1, obj2)
-    -- Obtener las coordenadas y tamaños de las áreas de colisión
-    local x1, y1, w1, h1 = obj1.x, obj1.y, obj1.width, obj1.height
-    local x2, y2, w2, h2 = obj2.x, obj2.y, obj2.width, obj2.height
+  -- Obtener las coordenadas y tamaños de las áreas de colisión
+  local x1, y1, w1, h1 = obj1.x, obj1.y, obj1.width, obj1.height
+  local x2, y2, w2, h2 = obj2.x, obj2.y, obj2.width, obj2.height
 
-    -- Verificar si las áreas de colisión se superponen
-    if x1 < x2 + w2 and
-       x1 + w1 > x2 and
-       y1 < y2 + h2 and
-       y1 + h1 > y2 then
-        return true -- Hay colisión
-    end
+  -- Verificar si las áreas de colisión se superponen
+  if x1 < x2 + w2 and
+      x1 + w1 > x2 and
+      y1 < y2 + h2 and
+      y1 + h1 > y2 then
+    return true -- Hay colisión
+  end
 
-    return false -- No hay colisión
+  return false -- No hay colisión
 end
+
 --[[function checkShotsOnEnemy(enemies, listEnemies, playerShots, listShots)
-    -- Verificar colisiones entre disparos y naves enemigas
+  -- Verificar colisiones entre disparos y naves enemigas
   for i, shot in ipairs(listShots) do
-      for j, enemy in ipairs(listEnemies) do   
-        if shot.x + playerShots.width > enemy.x and
+    for j, enemy in ipairs(listEnemies) do
+      if shot.x + playerShots.width > enemy.x and
           shot.x + playerShots.width < enemy.x + enemies.width and
           shot.y > enemy.y and
           shot.y < enemy.y + enemies.height then
-              table.remove(listShots, i)
-              table.remove(listEnemies, j)
-              score = score + 1
-              --love.timer.sleep(5)
-              break
-          end
+
+        love.audio.play(bum)
+        table.remove(listShots, i)
+        table.remove(listEnemies, j)
+        score = score + 1
+        --love.timer.sleep(5)
+        break
       end
+    end
   end
 end]]
+
 function checkShotsOnEnemy(enemies, listEnemies, playerShots, listShots)
   local enemyCount = #listEnemies
   local shotCount = #listShots
@@ -38,7 +42,7 @@ function checkShotsOnEnemy(enemies, listEnemies, playerShots, listShots)
   while i <= shotCount do
     local shot = listShots[i]
     if not shot.removed then
-      local shotX = shot.x + playerShots.width/2
+      local shotX = shot.x + playerShots.width / 2
 
       local j = 1
       local enemyRemoved = false
@@ -46,9 +50,12 @@ function checkShotsOnEnemy(enemies, listEnemies, playerShots, listShots)
       while j <= enemyCount do
         local enemy = listEnemies[j]
 
-        if shotX > enemy.x and shotX < enemy.x+48 and shot.y > enemy.y and shot.y < enemy.y+48 then
-          shot.removed = true
+        if shotX > enemy.x and shotX < enemy.x + 48 and shot.y > enemy.y and shot.y < enemy.y + 48 then
+          love.audio.play(bum)
+          enemy.death = true
+
           table.remove(listEnemies, j)
+          shot.removed = true
           enemyCount = enemyCount - 1
           shotCount = shotCount - 1
           score = score + 1
@@ -67,6 +74,7 @@ function checkShotsOnEnemy(enemies, listEnemies, playerShots, listShots)
     end
   end
 end
+
 function checkEnemyHitPlayer(enemies, listEnemies, player)
   -- Verificar colisiones entre jugador y naves enemigas
   local px = player.x
@@ -79,15 +87,17 @@ function checkEnemyHitPlayer(enemies, listEnemies, player)
   while j <= enemyCount do
     local enemy = listEnemies[j]
 
-    if px > enemy.x and px < enemy.x+48 and py > enemy.y and py < enemy.y+48 then
-      gameover = true
+    if px > enemy.x and px < enemy.x + 48 and py > enemy.y and py < enemy.y + 48 then
+      love.audio.play(bum)
       enemies.list = {}
+      deathPlayer()
       break
     end
 
     j = j + 1
   end
 end
+
 --[[function checkEnemyHitPlayer(enemies, listEnemies, player)
   -- Verificar colisiones entre jugador y naves enemigas
   for i, enemy in ipairs(listEnemies) do
