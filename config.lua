@@ -320,6 +320,4 @@ clevel.blocks = bs9
 table.insert(levelsCfg, clevel)
 
 
---
-
-TabToFile(levelsCfg, "levels.txt")
+--TabToFile(levelsCfg, "levels.txt")
