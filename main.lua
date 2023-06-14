@@ -2,8 +2,14 @@ require("check")
 
 require("config")
 
+local json = require("Libs/json")
 
 -- ____________________         Variables globales     ____________________
+
+local players = {}
+local highScore = 100
+local inputText = ''
+local inputUserName = false
 
 local activeProfiler = false
 local activeDebug = true
@@ -23,7 +29,7 @@ local c = 0
 
 local enemiesY = 0
 
-local lives = 3
+local lives = 1
 
 Nivel = 1
 
@@ -87,7 +93,7 @@ function setInitValues()
 
   level = 1
 
-  lives = 3
+  lives = 1
 
   llegoAlFinalFase = 0
 
@@ -135,6 +141,20 @@ function love.load(args)
   if activeProfiler then
     love.profiler = require('Libs/profile')
     love.profiler.start()
+  end
+   --[[   table.insert(players, {name = 'lulu', score = 101})
+      table.insert(players, {name = 'pepe', score = 99})
+      table.insert(players, {name = 'lui', score = 92})
+    local data = json:encode(players)
+    love.filesystem.write("scores.json", data)
+    ]]
+
+ if love.filesystem.getInfo("scores.json") then
+    local data = love.filesystem.read("scores.json")
+    players = json:decode(data)
+    if #players > 0 then
+      highScore = players[#players].score
+    end
   end
 
   love.window.setMode(900, 900) -- Cambia el tamaño de la ventana a 800x600
@@ -209,6 +229,21 @@ end
 -- __________________________Actualización del juego _________________________ UpDate _____________________
 
 function love.update(dt)
+  if inputUserName then
+    if love.keyboard.isDown("delete") or love.keyboard.isDown("clear") then
+      inputText = ''
+    elseif love.keyboard.isDown("return") then
+      playerName = inputText
+      table.insert(players, {name = playerName, score = score})
+      table.sort(players, function(a, b) return a.score > b.score end)
+      if #players > 10 then
+          table.remove(players)
+      end
+      inputUserName = false
+      pantallaInicio = true
+    end
+    return
+  end
   local tot = 0
   local proj
   local list
@@ -376,6 +411,11 @@ function love.update(dt)
 end
 
 --       ___________________________       Dibujo en pantalla   ____________________ LoveDraw ______________________
+function love.textinput(text)
+  if inputUserName then
+      inputText = inputText .. text
+  end
+end
 
 function love.draw()
   love.graphics.setColor(1, 1, 1)
@@ -405,9 +445,11 @@ function love.draw()
     love.graphics.print("GAME OVER", screenWidth / 2 - 50, screenHeight / 2)
     love.graphics.print("Score .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 25)
 
-    if score > 100 then
-      love.graphics.print("Introduce tu nombre .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 50)
-    end
+    if score > highScore then
+      inputUserName = true
+      love.graphics.print("Score: ".. score.. ". Introduce tu nombre: "..inputText, screenWidth / 2 - 50, screenHeight / 2 + 50)
+    end  
+  
   elseif isPaused then --  _______________ PAUSA ___________________
     love.graphics.print("Pausa", screenWidth / 2 - 50, screenHeight / 2) -- Muestra el mensaje de pausa en la pantalla
 
@@ -462,5 +504,7 @@ end
 
 -- ______________  QUIT _____________________
 function love.quit()
+    local data = json:encode(players)
+    love.filesystem.write("scores.json", data)
 
 end
