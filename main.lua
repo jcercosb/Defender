@@ -6,6 +6,8 @@ local json = require("Libs/json")
 
 -- ____________________         Variables globales     ____________________
 
+
+
 local players = {}
 local highScore = 100
 local inputText = ''
@@ -14,8 +16,6 @@ local inputUserName = false
 local activeProfiler = false
 local activeDebug = true
 
-
-
 local player = {}      -- Datos del jugador
 
 local projectiles = {} -- Almacena los proyectiles disparados :)
@@ -23,7 +23,6 @@ local projectiles = {} -- Almacena los proyectiles disparados :)
 local enemies = {}     -- Almacena los enemigos
 
 local record = {}      -- Almacena los records
-
 
 local c = 0
 
@@ -50,7 +49,6 @@ local llegoAlFinalFase = 0
 local czigzag = 0
 
 love.frame = 0
-
 
 function creaEnemigo(offx, offy, img)
   local enemy = {}
@@ -126,7 +124,7 @@ function deathPlayer()
   end
 end
 
--- introducir texto
+-- introducir texto _________________________________________________________________________________________________________
 
 function love.textinput(t)
   text = text .. t
@@ -142,18 +140,19 @@ function love.load(args)
     love.profiler = require('Libs/profile')
     love.profiler.start()
   end
-   --[[   table.insert(players, {name = 'lulu', score = 101})
+  --[[   table.insert(players, {name = 'lulu', score = 101})
       table.insert(players, {name = 'pepe', score = 99})
       table.insert(players, {name = 'lui', score = 92})
     local data = json:encode(players)
     love.filesystem.write("scores.json", data)
     ]]
 
- if love.filesystem.getInfo("scores.json") then
+  if love.filesystem.getInfo("scores.json") then
     local data = love.filesystem.read("scores.json")
     players = json:decode(data)
     if #players > 0 then
-      highScore = players[#players].score
+      highScore = players[1].score
+      newhighScore = players[#players].score
     end
   end
 
@@ -182,6 +181,10 @@ function love.load(args)
 
   -- ___________________ Carga de imágenes  __________________
 
+  pantallainicial = love.graphics.newImage("imagenes/space_shooter1.png")
+
+  fondoPantalla = love.graphics.newImage("imagenes/fondoPantalla.png")
+
   player.image = love.graphics.newImage("imagenes/player.png")
 
   player.width = 48
@@ -198,20 +201,18 @@ function love.load(args)
 
   projectiles.list = {}
 
-  enemies.imageList = { love.graphics.newImage("imagenes/Bum-48.png"),
+  enemies.imageList = { love.graphics.newImage("imagenes/Bum-48.png"), love.graphics.newImage("imagenes/nave1.png"),
     love.graphics.newImage("imagenes/nave2.png"), love.graphics.newImage("imagenes/nave3.png"),
     love.graphics.newImage("imagenes/nave4.png"), love.graphics.newImage("imagenes/nave5.png"),
     love.graphics.newImage("imagenes/nave6.png"), love.graphics.newImage("imagenes/nave7.png"),
     love.graphics.newImage("imagenes/nave8.png"), love.graphics.newImage("imagenes/nave9.png"),
-    love.graphics.newImage("imagenes/nave10.png"), love.graphics.newImage("imagenes/Bum-48.png") }
+    love.graphics.newImage("imagenes/nave10.png") }
 
   enemies.width = 48
 
   enemies.height = 48
 
   enemies.list = {}
-
-
 
 
   -- Configuración inicial del jugador
@@ -234,10 +235,10 @@ function love.update(dt)
       inputText = ''
     elseif love.keyboard.isDown("return") then
       playerName = inputText
-      table.insert(players, {name = playerName, score = score})
+      table.insert(players, { name = playerName, score = score })
       table.sort(players, function(a, b) return a.score > b.score end)
       if #players > 10 then
-          table.remove(players)
+        table.remove(players)
       end
       inputUserName = false
       pantallaInicio = true
@@ -256,29 +257,41 @@ function love.update(dt)
   end
 
 
-
-  -- _________________________ iniciar partida _______________________
+  -- _________________________ iniciar partida _______________________ INICIO ________________________________________________
 
   if pantallaInicio then
     love.audio.play(inicioPartida)
+    love.graphics.draw(pantallainicial, 0, 0)
     if love.keyboard.isDown("1") then
       setInitValues()
       love.audio.stop(inicioPartida)
     else
       return
     end
+    if love.keyboard.isDown("q") or love.keyboard.isDown("escape") then
+      love.audio.stop(inicioPartida)
+      love.quit()
+    else
+      return
+    end
   end
   if gameover then
-    if love.keyboard.isDown("j") then
+    if love.keyboard.isDown("1") then
       setInitValues()
       love.audio.stop(finalPartida)
+    else
+      return
+    end
+    if love.keyboard.isDown("q") or love.keyboard.isDown("escape") then
+      love.audio.stop(inicioPartida)
+      love.quit()
     else
       return
     end
   end
   -- _____________________ Detecta pausa __________________
 
-  if love.keyboard.isDown("p") or love.keyboard.isDown("escape") then
+  if love.keyboard.isDown("p") then
     isPaused = not isPaused -- Cambia el estado de pausa
   end
 
@@ -294,9 +307,9 @@ function love.update(dt)
 
   -- Movimiento del jugador
 
-  if love.keyboard.isDown("left") then
+  if love.keyboard.isDown("left") or love.keyboard.isDown("a") then
     player.x = player.x - 300 * dt
-  elseif love.keyboard.isDown("right") then
+  elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
     player.x = player.x + 300 * dt
   end
 
@@ -304,7 +317,7 @@ function love.update(dt)
 
   -- Disparo del jugador
 
-  if love.keyboard.isDown("space") then
+  if love.keyboard.isDown("space") or love.keyboard.isDown("up") then
     c = c + 1
 
     if c > delayShot then
@@ -413,7 +426,7 @@ end
 --       ___________________________       Dibujo en pantalla   ____________________ LoveDraw ______________________
 function love.textinput(text)
   if inputUserName then
-      inputText = inputText .. text
+    inputText = inputText .. text
   end
 end
 
@@ -423,36 +436,59 @@ function love.draw()
   if activeProfiler then
     love.graphics.print(love.report or "Please wait...")
   end
-
+  love.graphics.draw(fondoPantalla, 0, 0)
   --              Cabezera
 
   love.graphics.print("Vidas:" .. lives, 25, 25)
+  love.graphics.print("highScore:" .. highScore, screenWidth / 4 - 50, 25)
   love.graphics.print("Puntuacion:" .. score, screenWidth / 2 - 50, 25)
   love.graphics.print("Nivel:" .. level, screenWidth - 75, 25)
   -- _______________________ inicio partida __________________
 
   if pantallaInicio then
     love.audio.play(inicioPartida)
-    love.graphics.print("Pulsa 1 para iniciar", screenWidth / 2 - 50, screenHeight / 2)
-    --love.graphics.print("Score .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 25)
+    love.graphics.draw(pantallainicial, 0, 0)
+    love.graphics.setColor(0, 0, 1)
+
+    love.graphics.print("________ Pulsa ______ ", screenWidth / 2 - 50, screenHeight / 2 + 60)
+    love.graphics.print("- 1 para iniciar", screenWidth / 2 - 50, screenHeight / 2 + 80)
+    love.graphics.print("- Q o Esc para Salir", screenWidth / 2 - 50, screenHeight / 2 + 100)
+    love.graphics.setColor(1, 0, 0)
+    love.graphics.print("Records", screenWidth / 4 + 70, screenHeight / 2 + 140)
+    love.graphics.print("Jugadores", screenWidth / 2 - 70, screenHeight / 2 + 140)
+    for i = 1, #players do
+      love.graphics.print(players[i].score, screenWidth / 4 + 80, screenHeight / 2 + 160 + (15 * i))
+      love.graphics.print(players[i].name, screenWidth / 2 - 80, screenHeight / 2 + 160 + (15 * i))
+    end
+
+
+
     if love.keyboard.isDown("1") then
       pantallaInicio = false
+      love.graphics.draw(fondoPantalla, 0, 0)
       setInitValues()
       love.audio.stop(inicioPartida)
     end
   elseif gameover then --    _______________________  GAME OVER _________________
     love.audio.play(inicioPartida)
+    love.graphics.print(players[1], screenWidth / 2 - 50, screenHeight / 4)
+    love.graphics.print("Records", screenWidth / 4 - 50, screenHeight / 4)
+    love.graphics.print("Jugadores", screenWidth / 2 - 50, screenHeight / 4)
+    for i = 1, #players do
+      love.graphics.print(players[i].score, screenWidth / 4 - 50, screenHeight / 4 + (15 * i))
+      love.graphics.print(players[i].name, screenWidth / 2 - 50, screenHeight / 4 + (15 * i))
+    end
     love.graphics.print("GAME OVER", screenWidth / 2 - 50, screenHeight / 2)
     love.graphics.print("Score .-  " .. score, screenWidth / 2 - 50, screenHeight / 2 + 25)
+    love.graphics.print("Pulsa 1 para comenzar", screenWidth / 2 - 50, screenHeight / 2 + 100)
+    love.graphics.print("Pulsa Q o Esc para Salir", screenWidth / 2 - 50, screenHeight / 2 + 125)
 
-    if score > highScore then
+    if score > newhighScore then
       inputUserName = true
-      love.graphics.print("Score: ".. score.. ". Introduce tu nombre: "..inputText, screenWidth / 2 - 50, screenHeight / 2 + 50)
-    end  
-  
-  elseif isPaused then --  _______________ PAUSA ___________________
+      love.graphics.print("Introduce tu nombre: " .. inputText, screenWidth / 4 - 50, screenHeight / 2 + 50)
+    end
+  elseif isPaused then                                                   --  _______________ PAUSA ___________________
     love.graphics.print("Pausa", screenWidth / 2 - 50, screenHeight / 2) -- Muestra el mensaje de pausa en la pantalla
-
   else
     -- Dibujo del jugador
 
@@ -497,14 +533,10 @@ function love.draw()
       --end
     end
   end
-
-
-
 end
 
 -- ______________  QUIT _____________________
 function love.quit()
-    local data = json:encode(players)
-    love.filesystem.write("scores.json", data)
-
+  local data = json:encode(players)
+  love.filesystem.write("scores.json", data)
 end
